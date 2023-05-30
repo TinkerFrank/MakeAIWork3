@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Azure ChatGPT3.5</title>
+    <style>
+        .message {
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+
+        .chat-interface {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 18px; /* Adjust the font size as desired */
+        }
+
+        .chat-wrapper {
+            width: calc(33.33vw);
+        }
+
+        .user {
+            color: blue;
+        }
+
+        .assistant {
+            color: green;
+        }
+
+        .user-input-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+            width: 100%;
+            overflow: auto;
+        }
+        .user-input-form input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+        }
+
+        h1 {
+            font-family: monospace;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Azure ChatGPT3.5</h1>
+    <div class="chat-interface">
+        <div class="chat-wrapper">
+            <div id="chat-history">
+                {% for message in chat_history %}
+                {% if message.role == "user" %}
+                <p class="message user"><code>I: {{ message.content }}</code></p>
+                {% elif message.role == "assistant" %}
+                <p class="message assistant"><code>O: {{ message.content }}</code></p>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <form class="user-input-form" method="POST" action="/">
+                <input type="text" name="user_input" placeholder="Enter your message">
+                <input type="submit" value="Submit" hidden>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Scroll to the bottom of the chat history
+        function scrollToBottom() {
+            const chatHistory = document.getElementById("chat-history");
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        scrollToBottom();
+
+        // Stream new messages as they come in
+        const chatHistoryContainer = document.getElementById("chat-history");
+        const socket = new WebSocket("wss://your-socket-url"); // Replace with your WebSocket server URL
+
+        socket.onmessage = function (event) {
+            const message = JSON.parse(event.data);
+            const messageElement = document.createElement("p");
+
+            if (message.role === "user") {
+                messageElement.className = "message user";
+                messageElement.innerHTML = "<code>I: " + message.content + "</code>";
+            } else if (message.role === "assistant") {
+                messageElement.className = "message assistant";
+                messageElement.innerHTML = "<code>O: " + message.content + "</code>";
+            }
+
+            chatHistoryContainer.appendChild(messageElement);
+            scrollToBottom();
+        };
+    </script>
+</body>
+
+</html>
