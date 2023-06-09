@@ -11,3 +11,8 @@ Project 3/yolov5s.pt
 yolov5m.pt
 yolov5x.pt
 Project 3/Report_Apple.odt
+Project 3/apple_resized_128/
+Project 3/apple_resized_224/
+Project 3/apple_vit_classifier.pt
+Project 3/apple_resnet_classifier.pt
+Project 3/apple_myCNN_classifier.pt
