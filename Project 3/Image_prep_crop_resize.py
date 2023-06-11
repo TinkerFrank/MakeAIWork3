@@ -8,7 +8,7 @@ import torch
 # pip install -U ultralytics
 
 
-model = torch.hub.load('ultralytics/yolov5', 'yolov5m', pretrained=True)
+#model = torch.hub.load('ultralytics/yolov5', 'yolov5m', pretrained=True)
 
 
 #ViT model: pretrained on a dataset consisting of images with the dimension of 224 x 224 pixels.
@@ -16,7 +16,7 @@ model = torch.hub.load('ultralytics/yolov5', 'yolov5m', pretrained=True)
 #Finally the values are first rescaled to [0.0, 1.0] and then normalized using mean=[0.485, 0.456, 0.406] and std=[0.229, 0.224, 0.225].
 
 # resize 224x224 for optimal performance
-resizeshape = 128
+resizeshape = 224
 
 
 # for subdir, dirs, files in os.walk('./apple_disease_classification/Train'):
@@ -45,17 +45,18 @@ resizeshape = 128
 #                     resized_image.save(os.path.join(output_dir, file))
 
 
-for subdir, dirs, files in os.walk('./apple_resized_128/Train'):
+for subdir, dirs, files in os.walk('./new_apples_224'):
     for file in files:
         filepath = subdir + os.sep + file
 
         # to-do pre-check for all image filetypes
-        if filepath.endswith(".jpg") or filepath.endswith(".jpeg"):
+        if filepath.endswith(".jpg") or filepath.endswith(".jpeg") or filepath.endswith(".png"):
             img = Image.open(filepath)
             if img.size != (resizeshape,resizeshape):
                 # had to delete one because the jpg was not parseable somehow, blotch #17 is png ipv jpg look into it later
                 rgb_im = img.convert('RGB')
                 rgb_im_resized = rgb_im.resize(
-                    (resizeshape, resizeshape))  # lets try 128x128
+                    (resizeshape, resizeshape)) 
                 rgb_im_resized.save(filepath)
 
+# to run: $python Image_prep_crop_resize.py
