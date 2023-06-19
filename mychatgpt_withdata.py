@@ -25,7 +25,7 @@ token_limit = 4096
 conversation = []
 conversation.append(system_message)
 
-AQLinfo = "x is the sum of the amount of 'Bad Apple','Rot Apple' and 'Scab Apple', NOT 'Normal Apple' is x"
+AQLinfo = "x is the sum of the amount of 'Blotch Apple','Rot Apple' and 'Scab Apple'"
 conversation.append({"role": "system", "content": AQLinfo})
 
 AQLdata = {
@@ -36,11 +36,10 @@ AQLdata = {
 }
 conversation.append({"role": "system", "content": "{}".format(AQLdata)})
 
-AQLinfo = "the accuracy of the classifier used is 90%"
+AQLinfo = "the accuracy of the classifier used is 80%"
 conversation.append({"role": "system", "content": AQLinfo})
 
-
-
+# Loading the classification model
 modelresnet = torch.load('apple_resnet_classifier.pt',  map_location=torch.device('cpu'))
 modelresnet.to(device)
 modelresnet.eval()
@@ -49,6 +48,7 @@ modelresnet.eval()
 # image_url = input()
 # img = Image.open(image_url)
 
+# User input of sample location
 print('Enter folder location:')
 folder_url = input()
 #folder_url = r"D:\apple_50sample"
@@ -60,19 +60,19 @@ transform_img_normal = transforms.Compose([
 
 
 def predict(folder_path):
-    class_labels = ['Bad Apple', 'Normal Apple', 'Rot Apple', 'Scab Apple']
-    confusion_matrix = np.zeros((4, 4))
+    class_labels = ['Blotch Apple', 'Normal Apple', 'Rot Apple', 'Scab Apple']
     class_counts = [0,0,0,0]
 
     dataset = ImageFolder(folder_path, transform=transform_img_normal)
     dataset_loader = torch.utils.data.DataLoader(dataset, batch_size=50, shuffle=False)
-    bad,normal,rot,scab = 0,0,0,0
 
     with torch.no_grad():
         for data in dataset_loader:
             inputs, labels = data
 
-            inputs = inputs.to(device) #because weights are cuda casted need to be equal
+            #weights in the loaded model are cuda casted 
+            #cast the inputs also to cuda to make it work 
+            inputs = inputs.to(device)
 
             out = modelresnet(inputs).to(device)
             _, predicted = torch.max(out.data, 1)
@@ -133,7 +133,6 @@ while (True):
 
     user_input = input("")
 
-    # write exit statement
     if (user_input == 'q'):
         break
 
