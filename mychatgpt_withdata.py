@@ -20,24 +20,26 @@ openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
 openai.api_key = os.getenv("AZURE_OPENAI_KEY")
 
 system_message = {"role": "system", "content": "You are a helpful assistant."}
+# role: system  -> sets the behaviour of the assistant, enables dev to frame the conversation without being part of the convo (whisper in his ear before going on stage)
+# role: user -> you 
 max_response_tokens = 250
 token_limit = 4096
 conversation = []
 conversation.append(system_message)
 
-AQLinfo = "x is the sum of the amount of 'Blotch Apple','Rot Apple' and 'Scab Apple'"
-conversation.append({"role": "system", "content": AQLinfo})
+AQLdetails = """
+- depending on the amount of bad apples defined as x we decide the acceptable quality limit class (AQL) with the following logic:
+for x = 'Blotch Apple'+'Rot Apple' + 'Scab Apple':
+    if x=0 then AQL Class I, suitable for supermarket and export
+    if 1<x=<8 then AQL CLass II, suitable for making applesauce
+    if 8<x=<15 then AQL Class III, suitable for making syrup
+    if x>15 then AQL Class IV, rejected apples
+- always check before responding if the calculated x falls in the correct AQL Class but don't mention this check
+- a good way to provide insight is to provide a table consisting of two columns. In the first column put the counts of each type of apple in descending order and in the second column put the percentage of occurance which is the count of the type of apple divided by the total amount of apples. Always check if the total percentages add up to 1 but don't mention it. Use an ASCII art bar graph to make the table pretty. 
+"""
 
-AQLdata = {
-  "AQL Class I": "x=0 the entire batch is classified as 'Normal Apple'",
-  "AQL Class II ": "1<x<8 apples in the batch are NOT 'Normal Apple'",
-  "AQL Class III": "8>x>15 apples in the batch are NOT 'Normal Apple'",
-  "AQL CLass IV": "x>15 apples in the batchare NOT 'Normal Apple'"
-}
-conversation.append({"role": "system", "content": "{}".format(AQLdata)})
-
-AQLinfo = "the accuracy of the classifier used is 80%"
-conversation.append({"role": "system", "content": AQLinfo})
+ChatBotGoal = f"Your task is to provide information and insights on the results of sampling a batch of apples based on the information provided in the AQL knowledge delimited by triple backticks and the model output provided as a dictionary. AQL knowledge: ```{AQLdetails}```. Keep the response short and concise no longer then 3 sentences"
+conversation.append({"role": "system", "content": ChatBotGoal})
 
 # Loading the classification model
 modelresnet = torch.load('apple_resnet_classifier.pt',  map_location=torch.device('cpu'))
@@ -105,7 +107,8 @@ def predict(folder_path):
 #         return confidences
 
 def append_data(table):
-    table_input = {"role": "system", "content": "{}".format(table)}
+    prompt = f"here are the results of the model in a dictionary {table}"
+    table_input = {"role": "system", "content": prompt}
     print(table_input)
     conversation.append(table_input)
     print('table appended')
