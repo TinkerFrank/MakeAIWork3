@@ -13,7 +13,7 @@ def realtimeplot(inputlist):
     plt.plot([epoch[0] for epoch in inputlist], label='training')
     plt.plot([epoch[1] for epoch in inputlist], label='validation')
     plt.legend()
-    plt.ylim(ymin=0,ymax=1)
+    #plt.ylim(ymin=0,ymax=1)
     plt.show(block=False)
     plt.pause(.1)
 
@@ -21,6 +21,6 @@ def startplot():
     plt.title('Training...')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.ylim(ymin=0,ymax=1)
+    #plt.ylim(ymin=0,ymax=1)
     plt.legend()
     plt.show()

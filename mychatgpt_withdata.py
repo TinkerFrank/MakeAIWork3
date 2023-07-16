@@ -7,6 +7,8 @@ from torchvision.datasets import ImageFolder
 import numpy as np
 from PIL import Image
 from torchvision import transforms
+from tqdm import tqdm
+from time import sleep
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -20,24 +22,30 @@ openai.api_base = os.getenv("AZURE_OPENAI_ENDPOINT")
 openai.api_key = os.getenv("AZURE_OPENAI_KEY")
 
 system_message = {"role": "system", "content": "You are a helpful assistant."}
+# role: system  -> sets the behaviour of the assistant, enables dev to frame the conversation without being part of the convo (whisper in his ear before going on stage)
+# role: user -> you 
 max_response_tokens = 250
 token_limit = 4096
 conversation = []
 conversation.append(system_message)
 
-AQLinfo = "x is the sum of the amount of 'Blotch Apple','Rot Apple' and 'Scab Apple'"
-conversation.append({"role": "system", "content": AQLinfo})
+AQLdetails = """
+- depending on the amount of bad apples defined as x we decide the acceptable quality limit class (AQL) with the following logic:
+for x = 'Blotch Apple'+'Rot Apple' + 'Scab Apple':
+    if x=0 then AQL Class I, suitable for supermarket and export
+    if 1<x=<8 then AQL CLass II, suitable for making applesauce
+    if 8<x=<15 then AQL Class III, suitable for making syrup
+    if x>15 then AQL Class IV, rejected apples
+- Follow these steps to determine the AQL class:
+    1. from the dictionary calculate the total amount of apples by adding the amount of each type
+    2. from the dictionary get the amount of type 'Normal Apples'
+    3. calculate the amount of bad apples by substracting the type 'Normal Apples' from the total amount of apples
+    4. based on the amount of bad apple, also known as x, determine the AQL classification
+- a good way to provide insight is to provide a table consisting of two columns. In the first column put the counts of each type of apple in descending order and in the second column put the percentage of occurance which is the count of the type of apple divided by the total amount of apples. Always check if the total percentages add up to 1 but don't mention it. Use an ASCII art bar graph to make the table pretty. 
+"""
 
-AQLdata = {
-  "AQL Class I": "x=0 the entire batch is classified as 'Normal Apple'",
-  "AQL Class II ": "1<x<8 apples in the batch are NOT 'Normal Apple'",
-  "AQL Class III": "8>x>15 apples in the batch are NOT 'Normal Apple'",
-  "AQL CLass IV": "x>15 apples in the batchare NOT 'Normal Apple'"
-}
-conversation.append({"role": "system", "content": "{}".format(AQLdata)})
-
-AQLinfo = "the accuracy of the classifier used is 80%"
-conversation.append({"role": "system", "content": AQLinfo})
+ChatBotGoal = f"Your task is to provide information and insights on the results of sampling a batch of apples based on the information provided in the AQL knowledge delimited by triple backticks and the model output provided as a dictionary. AQL knowledge: ```{AQLdetails}```. Keep the response short and concise no longer then 3 sentences"
+conversation.append({"role": "system", "content": ChatBotGoal})
 
 # Loading the classification model
 modelresnet = torch.load('apple_resnet_classifier.pt',  map_location=torch.device('cpu'))
@@ -48,6 +56,15 @@ modelresnet.eval()
 # image_url = input()
 # img = Image.open(image_url)
 
+# Make program known to user
+print('''
+    ___                __        ________                _ _____          
+   /   |  ____  ____  / /__     / ____/ /___ ___________(_) __(_)__  _____
+  / /| | / __ \/ __ \/ / _ \   / /   / / __ `/ ___/ ___/ / /_/ / _ \/ ___/
+ / ___ |/ /_/ / /_/ / /  __/  / /___/ / /_/ (__  |__  ) / __/ /  __/ /    
+/_/  |_/ .___/ .___/_/\___/   \____/_/\__,_/____/____/_/_/ /_/\___/_/     
+      /_/   /_/                                                           
+      ''')
 # User input of sample location
 print('Enter folder location:')
 folder_url = input()
@@ -65,7 +82,6 @@ def predict(folder_path):
 
     dataset = ImageFolder(folder_path, transform=transform_img_normal)
     dataset_loader = torch.utils.data.DataLoader(dataset, batch_size=50, shuffle=False)
-
     with torch.no_grad():
         for data in dataset_loader:
             inputs, labels = data
@@ -76,7 +92,7 @@ def predict(folder_path):
 
             out = modelresnet(inputs).to(device)
             _, predicted = torch.max(out.data, 1)
-            for p in predicted:
+            for p in tqdm(predicted):
                 if p.item() == 0:
                     class_counts[0] += 1
                 elif p.item() == 1:
@@ -85,8 +101,10 @@ def predict(folder_path):
                     class_counts[2] += 1
                 else:
                     class_counts[3] += 1
-
+                sleep(0.1)
+        
         label_counts_dict = {label: count for label, count in zip(class_labels, class_counts)}
+
         return label_counts_dict
 
 
@@ -105,10 +123,11 @@ def predict(folder_path):
 #         return confidences
 
 def append_data(table):
-    table_input = {"role": "system", "content": "{}".format(table)}
-    print(table_input)
+    prompt = f"here are the results of the model in a dictionary {table}"
+    table_input = {"role": "system", "content": prompt}
+    #print(table_input)
     conversation.append(table_input)
-    print('table appended')
+    print('Sample batch has been processed, you can now question the data in natural language:')
 
 #x = predict(img)
 x = predict(folder_url)
@@ -129,7 +148,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
 
 
 while (True):
-    print('Input:')
+    print('Question(enter q to exit):')
 
     user_input = input("")
 
