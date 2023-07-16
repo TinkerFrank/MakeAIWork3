@@ -36,11 +36,15 @@ for x = 'Blotch Apple'+'Rot Apple' + 'Scab Apple':
     if 1<x=<8 then AQL CLass II, suitable for making applesauce
     if 8<x=<15 then AQL Class III, suitable for making syrup
     if x>15 then AQL Class IV, rejected apples
+<<<<<<< HEAD
 - Follow these steps to determine the AQL class:
     1. from the dictionary calculate the total amount of apples by adding the amount of each type
     2. from the dictionary get the amount of type 'Normal Apples'
     3. calculate the amount of bad apples by substracting the type 'Normal Apples' from the total amount of apples
     4. based on the amount of bad apple, also known as x, determine the AQL classification
+=======
+- always check before responding if the calculated x falls in the correct AQL Class but don't mention this check
+>>>>>>> 75c7e47adfca08882e9594ddc9e56b22a8311719
 - a good way to provide insight is to provide a table consisting of two columns. In the first column put the counts of each type of apple in descending order and in the second column put the percentage of occurance which is the count of the type of apple divided by the total amount of apples. Always check if the total percentages add up to 1 but don't mention it. Use an ASCII art bar graph to make the table pretty. 
 """
 
@@ -125,7 +129,11 @@ def predict(folder_path):
 def append_data(table):
     prompt = f"here are the results of the model in a dictionary {table}"
     table_input = {"role": "system", "content": prompt}
+<<<<<<< HEAD
     #print(table_input)
+=======
+    print(table_input)
+>>>>>>> 75c7e47adfca08882e9594ddc9e56b22a8311719
     conversation.append(table_input)
     print('Sample batch has been processed, you can now question the data in natural language:')
 

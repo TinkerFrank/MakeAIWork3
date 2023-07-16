@@ -1,7 +1,10 @@
 import unittest
 
+<<<<<<< HEAD
 #test early, check for OS type and environment 
 
+=======
+>>>>>>> 75c7e47adfca08882e9594ddc9e56b22a8311719
 class TestStringMethods(unittest.TestCase):
 
     def test_upper(self):
